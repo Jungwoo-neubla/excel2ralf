@@ -26,8 +26,19 @@ class Register(Base):
 
     # ================ generate ralf code ================ #
     def gen_ralf_code(self):
+        msb = 0
         ralf = f"register {self.get_name()} {{\n"
         for f in reversed(self.__field_list):
             ralf += f.gen_ralf_code()
+            msb = f.get_bits()[0]
+
+        msb = int(self.get_width()) - msb - 1
+        if msb > 0:
+            f_rsvd = Field("rsvd")
+            f_rsvd.set_bits([int(self.get_width())-1, int(self.get_width())-msb])
+            f_rsvd.set_access("ro")
+            f_rsvd.set_reset(f"{msb}'h0")
+            ralf += f_rsvd.gen_ralf_code()
+
         ralf += "}\n\n"
         return ralf
